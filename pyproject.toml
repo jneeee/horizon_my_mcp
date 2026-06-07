@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[project]
+name = "horizon-my-mcp"
+version = "0.1.0"
+description = "Tavily search MCP server, deployed to Prefect Horizon."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp[cli]>=1.0.0",
+    "tavily-python>=0.5.0",
+]
+
+[project.optional-dependencies]
+deploy = [
+    "prefect>=3.0.0",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5.0",
+]
+
+[project.scripts]
+horizon-mcp = "mcp_server.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mcp_server"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

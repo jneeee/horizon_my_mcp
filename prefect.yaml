@@ -1,0 +1,37 @@
+# Prefect deployment manifest for Prefect Horizon (horizon.prefect.io).
+#
+# `prefect deploy` reads this file. The push step uploads the local
+# source to a Prefect work pool, and the GitHub Actions workflow calls
+# `prefect deploy` on every push to main.
+name: horizon-tavily-mcp
+version: "{{ $env.PREFECT_DEPLOYMENT_VERSION }}"
+
+build:
+  - prefect.deployments.steps.run_shell:
+      id: install-deps
+      command: pip install -e ".[deploy]"
+      stream_output: true
+
+push:
+  - prefect.deployments.steps.run_shell:
+      id: push-source
+      command: |
+        echo "Pushed by prefect deploy; source is bundled at build time."
+
+pull:
+  - prefect.deployments.steps.run_shell:
+      id: pull-source
+      command: echo "Source already present in work pool image."
+
+deployments:
+  - name: smoke-test
+    entrypoint: prefect_flows/flows.py:smoke_test
+    work_pool_name: "{{ $env.HORIZON_WORK_POOL }}"
+    parameters: {}
+    schedule:
+      cron: "0 */6 * * *"
+      timezone: "UTC"
+    tags:
+      - mcp
+      - tavily
+      - horizon

@@ -1,0 +1,59 @@
+name: Deploy to Prefect Horizon
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-horizon
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: prefect deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      PREFECT_API_URL: ${{ vars.PREFECT_API_URL }}
+      PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY }}
+      HORIZON_WORK_POOL: ${{ vars.HORIZON_WORK_POOL }}
+      TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+      PREFECT_DEPLOYMENT_VERSION: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[deploy]"
+
+      - name: Preflight checks
+        env:
+          PREFECT_API_URL: ${{ env.PREFECT_API_URL }}
+          PREFECT_API_KEY: ${{ env.PREFECT_API_KEY }}
+        run: |
+          if [ -z "$PREFECT_API_URL" ]; then
+            echo "::error::PREFECT_API_URL is not set in repo variables."
+            exit 1
+          fi
+          if [ -z "$PREFECT_API_KEY" ]; then
+            echo "::error::PREFECT_API_KEY is not set in repo secrets."
+            exit 1
+          fi
+          if [ -z "$HORIZON_WORK_POOL" ]; then
+            echo "::error::HORIZON_WORK_POOL is not set in repo variables."
+            exit 1
+          fi
+          prefect cloud login --key "$PREFECT_API_KEY" --workspace "$PREFECT_API_URL"
+
+      - name: Deploy flow to Horizon
+        run: |
+          prefect deploy \
+            --name horizon-tavily-mcp \
+            --all
