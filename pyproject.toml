@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling>=1.18"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.5.0", "hatchling"]
+build-backend = "uv_build"
 
 [project]
 name = "horizon-my-mcp"
@@ -13,21 +13,31 @@ dependencies = [
     "tavily-python>=0.5.0",
 ]
 
-[project.optional-dependencies]
-deploy = [
-    "prefect>=3.0.0",
-]
+[project.scripts]
+horizon-mcp = "mcp_server.server:main"
+
+[dependency-groups]
 dev = [
     "pytest>=8.0",
     "ruff>=0.5.0",
 ]
+deploy = [
+    "prefect>=3.0.0",
+]
 
-[project.scripts]
-horizon-mcp = "mcp_server.server:main"
+[tool.uv]
+package = true
+default-groups = ["dev"]
+required-version = ">=0.5.0"
 
-[tool.hatch.build.targets.wheel]
-packages = ["mcp_server"]
+[tool.uv.build-backend]
+module-name = "mcp_server"
+module-root = ""
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"

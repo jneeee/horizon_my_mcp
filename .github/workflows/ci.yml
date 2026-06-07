@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: lint + test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      TAVILY_API_KEY: test-key-not-used    # conftest.py reads it on import
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version-file: .python-version
+          enable-cache: true
+
+      - name: Sync dependencies
+        run: uv sync --frozen
+
+      - name: Verify lockfile is up to date
+        run: uv lock --check
+
+      - name: Lint with ruff
+        # Format check intentionally omitted: the repo predates uv and
+        # has pre-existing style nits. Lint-only is enforced going forward.
+        run: uv run ruff check .
+
+      - name: Run tests
+        run: uv run pytest
