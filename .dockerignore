@@ -1,0 +1,14 @@
+.venv/
+.git/
+.github/
+.gitignore
+.dockerignore
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+__pycache__/
+*.py[cod]
+tests/
+README.md
+AGENTS.md
+.prefect/
