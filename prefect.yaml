@@ -3,7 +3,7 @@
 # `prefect deploy` reads this file. The push step uploads the local
 # source to a Prefect work pool, and the GitHub Actions workflow calls
 # `prefect deploy` on every push to main.
-name: horizon-tavily-mcp
+name: horizon-my-mcp
 version: "{{ $env.PREFECT_DEPLOYMENT_VERSION }}"
 
 build:
@@ -33,5 +33,6 @@ deployments:
       timezone: "UTC"
     tags:
       - mcp
+      - firecrawl
       - tavily
       - horizon

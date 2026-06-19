@@ -1,4 +1,4 @@
-"""Console entry point: `python -m mcp_server`."""
+"""Console entry point: `python -m horizon_my_mcp`."""
 from .server import main
 
 if __name__ == "__main__":

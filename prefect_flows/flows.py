@@ -1,9 +1,11 @@
-"""Prefect flow that smoke-tests the Tavily MCP server.
+"""Prefect flow that smoke-tests the MCP server.
 
 This is the unit of work that Prefect Horizon schedules. The flow boots
 the MCP server in stdio mode, sends a single `tools/list` request, and
 shuts it down. A successful run proves the bundled server is importable
-and that the Tavily client can be initialised with the configured key.
+and that the client libraries (Tavily / Firecrawl) can be initialised
+with the configured keys (or the Firecrawl keyless free tier when no
+key is set).
 """
 from __future__ import annotations
 
@@ -14,8 +16,12 @@ from pathlib import Path
 
 from prefect import flow, get_run_logger
 
+# After the src/ layout migration, the MCP server entry point is
+# `python -m horizon_my_mcp.server`. We resolve the file relative to the
+# project root, which is the parent of `prefect_flows/` for both the
+# editable install and the Prefect image.
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SERVER_ENTRY = REPO_ROOT / "mcp_server" / "server.py"
+SERVER_ENTRY = REPO_ROOT / "src" / "horizon_my_mcp" / "server.py"
 
 LIST_TOOLS_REQUEST = (
     '{"jsonrpc":"2.0","id":1,"method":"initialize",'
@@ -26,12 +32,10 @@ LIST_TOOLS_REQUEST = (
 )
 
 
-@flow(name="horizon-tavily-mcp-smoke", log_prints=True)
+@flow(name="horizon-my-mcp-smoke", log_prints=True)
 def smoke_test() -> dict:
     """Boot the MCP server, list its tools, and exit."""
     logger = get_run_logger()
-    if not os.environ.get("TAVILY_API_KEY"):
-        raise RuntimeError("TAVILY_API_KEY must be set in the deployment environment")
 
     logger.info("Starting MCP server smoke test from %s", SERVER_ENTRY)
     proc = subprocess.run(
@@ -65,9 +69,11 @@ def smoke_test() -> dict:
         if tools:
             tool_names = [t.get("name") for t in tools if isinstance(t, dict)]
 
-    if "tavily_search" not in tool_names:
+    expected = {"web_search", "web_extract", "web_agent", "tavily_search"}
+    missing = expected - set(tool_names)
+    if missing:
         raise RuntimeError(
-            f"Expected 'tavily_search' tool, got: {tool_names}. stdout={stdout!r}"
+            f"Missing tools {missing}; got: {tool_names}. stdout={stdout!r}"
         )
 
     logger.info("MCP server healthy. Tools: %s", tool_names)
