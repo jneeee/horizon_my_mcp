@@ -28,10 +28,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Sync dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[deploy]"
+          uv sync --frozen --group deploy
 
       - name: Preflight checks
         env:
@@ -55,5 +56,5 @@ jobs:
       - name: Deploy flow to Horizon
         run: |
           prefect deploy \
-            --name horizon-tavily-mcp \
+            --name horizon-my-mcp \
             --all

@@ -1,0 +1,35 @@
+# Venv / build artifacts
+.venv/
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.py[cod]
+
+# VCS / CI
+.git/
+.github/
+
+# Tests (not needed in runtime image)
+tests/
+
+# Tooling caches
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Secrets / local state — never bake into image
+.env
+.env.*
+
+# Prefect local state
+.prefect/
+.prefect_storage/
+
+# Locked but reproducible elsewhere; keep uv.lock in the build context
+# (it's small and avoids drift). Do NOT keep .venv here.
